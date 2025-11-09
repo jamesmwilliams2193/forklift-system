@@ -4232,4 +4232,88 @@ setTimeout(function() {
     console.log('✅ Initialization complete!');
 }, 1000);
 </script>
+  <script>
+// Setup Save Function
+window.saveSetup = function() {
+    var sheetUrl = document.getElementById('setupSheetUrl').value.trim();
+    var emailPublicKey = document.getElementById('setupEmailPublicKey').value.trim();
+    var emailServiceId = document.getElementById('setupEmailServiceId').value.trim();
+    var emailTemplateId = document.getElementById('setupEmailTemplateId').value.trim();
+
+    if (!sheetUrl || !emailPublicKey || !emailServiceId || !emailTemplateId) {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    // Save to localStorage
+    var config = {
+        sheetUrl: sheetUrl,
+        emailPublicKey: emailPublicKey,
+        emailServiceId: emailServiceId,
+        emailTemplateId: emailTemplateId,
+        isConfigured: true
+    };
+    
+    localStorage.setItem('forkliftSystemConfig', JSON.stringify(config));
+    
+    alert('✅ Configuration saved!\n\nYour system is now connected.');
+    
+    // Close modal
+    document.getElementById('setupModal').style.display = 'none';
+    
+    // Reload page
+    setTimeout(function() {
+        location.reload();
+    }, 1000);
+};
+
+// Initialize charts
+window.refreshDashboard = function() {
+    if (!window.changeRequests) return;
+    
+    // Render metrics
+    var metricsGrid = document.getElementById('metricsGrid');
+    if (metricsGrid) {
+        var total = window.changeRequests.length;
+        var completed = window.changeRequests.filter(function(r) { return r.status === 'completed'; }).length;
+        metricsGrid.innerHTML = '<div class="metric-card"><div class="metric-label">Total</div><div class="metric-value">' + total + '</div></div>';
+    }
+    
+    // Render charts if Chart.js is available
+    if (typeof Chart !== 'undefined') {
+        var ctx = document.getElementById('statusChart');
+        if (ctx && !window.statusChart) {
+            ctx = ctx.getContext('2d');
+            var statusCounts = {
+                'submitted': window.changeRequests.filter(function(r) { return r.status === 'submitted'; }).length,
+                'completed': window.changeRequests.filter(function(r) { return r.status === 'completed'; }).length
+            };
+            
+            window.statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Submitted', 'Completed', 'Other'],
+                    datasets: [{
+                        data: [statusCounts.submitted, statusCounts.completed, window.changeRequests.length - statusCounts.submitted - statusCounts.completed],
+                        backgroundColor: ['#ffc107', '#6c757d', '#28a745']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#ffffff' }
+                        }
+                    }
+                }
+            });
+        }
+    }
+};
+
+console.log('✅ Setup and charts ready!');
+</script>
     </body></html>
+
