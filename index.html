@@ -4615,7 +4615,124 @@ setTimeout(function() {
     
 }, 3000);
 </script>
+  <script>
+// Google Sheets Integration
+window.saveToGoogleSheets = async function(requestData) {
+    var config = JSON.parse(localStorage.getItem('forkliftSystemConfig') || '{}');
+    
+    if (!config.isConfigured || !config.sheetUrl) {
+        console.log('Google Sheets not configured, saving locally only');
+        localStorage.setItem('changeRequests', JSON.stringify(window.changeRequests));
+        return true;
+    }
+
+    try {
+        console.log('Sending to Google Sheets:', config.sheetUrl);
+        
+        await fetch(config.sheetUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'create',
+                data: requestData
+            })
+        });
+
+        console.log('✅ Data sent to Google Sheets');
+        return true;
+    } catch (error) {
+        console.error('❌ Error saving to Google Sheets:', error);
+        localStorage.setItem('changeRequests', JSON.stringify(window.changeRequests));
+        return false;
+    }
+};
+
+// Update submitRequest to use Google Sheets
+var originalSubmit = window.submitRequest;
+window.submitRequest = async function() {
+    var department = document.getElementById('department').value;
+    var requestorName = document.getElementById('requestorName').value.trim();
+    var requestorEmail = document.getElementById('requestorEmail').value.trim();
+    var unitNumber = document.getElementById('unitNumber').value.trim();
+    var model = document.getElementById('model').value.trim();
+    var changeType = document.getElementById('changeType').value;
+    var priority = document.getElementById('priority').value;
+    var requiresDepot = document.getElementById('requiresDepot').value;
+    var changeDescription = document.getElementById('changeDescription').value.trim();
+    var changeReason = document.getElementById('changeReason').value.trim();
+
+    if (!department || !requestorName || !requestorEmail || !unitNumber || !model || 
+        !changeType || !priority || !requiresDepot || !changeDescription || !changeReason) {
+        alert('Please fill in all required fields');
+        return;
+    }
+
+    var requestId = 'CR-' + Date.now();
+    var request = {
+        id: requestId,
+        date: new Date().toISOString().split('T')[0],
+        department: department,
+        requestor: requestorName,
+        email: requestorEmail,
+        phone: document.getElementById('requestorPhone').value,
+        unitNumber: unitNumber,
+        model: model,
+        customer: document.getElementById('customerName').value,
+        location: document.getElementById('currentLocation').value,
+        changeType: changeType,
+        priority: priority,
+        requiresDepot: requiresDepot,
+        description: changeDescription,
+        reason: changeReason,
+        status: 'submitted',
+        assignedTo: '',
+        updates: JSON.stringify([{
+            date: new Date().toISOString().split('T')[0],
+            status: 'submitted',
+            note: 'Initial request submitted',
+            user: requestorName
+        }])
+    };
+
+    // Initialize array if needed
+    if (!window.changeRequests) {
+        window.changeRequests = [];
+    }
+    
+    window.changeRequests.unshift(request);
+    
+    // Save to Google Sheets
+    console.log('Submitting request:', request);
+    await saveToGoogleSheets(request);
+
+    document.getElementById('successRequestNumber').textContent = requestId;
+    document.getElementById('successMessage').style.display = 'block';
+
+    setTimeout(function() {
+        // Reset form
+        document.querySelectorAll('input, select, textarea').forEach(function(field) {
+            if (field.type === 'checkbox') {
+                field.checked = false;
+            } else {
+                field.value = '';
+            }
+        });
+        
+        document.getElementById('successMessage').style.display = 'none';
+        
+        // Switch to view tab
+        var viewTab = document.querySelector('.tab[data-tab="view-requests"]');
+        if (viewTab) viewTab.click();
+    }, 2000);
+};
+
+console.log('✅ Google Sheets integration loaded');
+</script>
     </body></html>
+
 
 
 
