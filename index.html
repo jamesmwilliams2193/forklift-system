@@ -1,4 +1,5 @@
 <html><head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta>
  
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4315,5 +4316,121 @@ window.refreshDashboard = function() {
 
 console.log('✅ Setup and charts ready!');
 </script>
+  <script>
+// Force chart initialization
+setTimeout(function() {
+    console.log('Checking Chart.js...', typeof Chart);
+    
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js not loaded!');
+        return;
+    }
+    
+    // Wait for changeRequests to exist
+    var attempts = 0;
+    var checkData = setInterval(function() {
+        attempts++;
+        if (window.changeRequests && window.changeRequests.length > 0) {
+            console.log('Found ' + window.changeRequests.length + ' requests, rendering charts...');
+            clearInterval(checkData);
+            renderAllCharts();
+        } else if (attempts > 10) {
+            console.log('No data yet, using sample data...');
+            clearInterval(checkData);
+            window.changeRequests = generateSampleData();
+            renderAllCharts();
+        }
+    }, 500);
+    
+}, 2000);
+
+function generateSampleData() {
+    var data = [];
+    for (var i = 0; i < 10; i++) {
+        data.push({
+            id: 'CR-' + i,
+            date: new Date().toISOString().split('T')[0],
+            status: ['submitted', 'completed', 'in-progress'][i % 3],
+            priority: ['high', 'medium', 'low'][i % 3],
+            department: ['sales', 'service', 'engineering'][i % 3],
+            changeType: ['modification', 'repair'][i % 2]
+        });
+    }
+    return data;
+}
+
+function renderAllCharts() {
+    console.log('Rendering all charts...');
+    
+    // Status Chart
+    var statusCtx = document.getElementById('statusChart');
+    if (statusCtx) {
+        var ctx = statusCtx.getContext('2d');
+        var statusCounts = {
+            submitted: window.changeRequests.filter(function(r) { return r.status === 'submitted'; }).length,
+            completed: window.changeRequests.filter(function(r) { return r.status === 'completed'; }).length,
+            inProgress: window.changeRequests.filter(function(r) { return r.status === 'in-progress'; }).length
+        };
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Submitted', 'Completed', 'In Progress'],
+                datasets: [{
+                    data: [statusCounts.submitted, statusCounts.completed, statusCounts.inProgress],
+                    backgroundColor: ['#ffc107', '#6c757d', '#007bff']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#ffffff', padding: 15 }
+                    }
+                }
+            }
+        });
+        console.log('✅ Status chart rendered');
+    }
+    
+    // Priority Chart
+    var priorityCtx = document.getElementById('priorityChart');
+    if (priorityCtx) {
+        var ctx2 = priorityCtx.getContext('2d');
+        var priorityCounts = {
+            high: window.changeRequests.filter(function(r) { return r.priority === 'high'; }).length,
+            medium: window.changeRequests.filter(function(r) { return r.priority === 'medium'; }).length,
+            low: window.changeRequests.filter(function(r) { return r.priority === 'low'; }).length
+        };
+        
+        new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: ['High', 'Medium', 'Low'],
+                datasets: [{
+                    data: [priorityCounts.high, priorityCounts.medium, priorityCounts.low],
+                    backgroundColor: ['#dc3545', '#ffc107', '#28a745']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#ffffff', padding: 15 }
+                    }
+                }
+            }
+        });
+        console.log('✅ Priority chart rendered');
+    }
+    
+    console.log('✅ All charts rendered!');
+}
+</script>
     </body></html>
+
 
