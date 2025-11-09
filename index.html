@@ -4185,4 +4185,51 @@
         <button onclick="saveSetup()" style="width: 100%; margin-top: 15px;">💾 Save Configuration</button>
     </div>
 </div>
+<script>
+// Force initialization
+console.log('Forcing tab initialization...');
+
+setTimeout(function() {
+    // Fix tabs
+    var tabs = document.querySelectorAll('.tab');
+    console.log('Found ' + tabs.length + ' tabs');
+    
+    tabs.forEach(function(tab) {
+        tab.onclick = function(e) {
+            e.preventDefault();
+            var tabId = this.getAttribute('data-tab');
+            console.log('Switching to tab: ' + tabId);
+            
+            // Remove active from all
+            document.querySelectorAll('.tab').forEach(function(t) {
+                t.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(function(c) {
+                c.classList.remove('active');
+            });
+            
+            // Add active to clicked
+            this.classList.add('active');
+            var content = document.getElementById(tabId);
+            if (content) {
+                content.classList.add('active');
+                console.log('Tab switched successfully!');
+            }
+        };
+    });
+    
+    // Fix setup button
+    window.showSetupModal = function() {
+        console.log('Opening setup modal...');
+        var modal = document.getElementById('setupModal');
+        if (!modal) {
+            alert('Setup modal not found. The modal HTML might be missing.');
+            return;
+        }
+        modal.style.display = 'block';
+    };
+    
+    console.log('✅ Initialization complete!');
+}, 1000);
+</script>
     </body></html>
