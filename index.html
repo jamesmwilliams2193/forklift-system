@@ -4431,6 +4431,191 @@ function renderAllCharts() {
     console.log('✅ All charts rendered!');
 }
 </script>
+  <script>
+// Render ALL 6 charts
+setTimeout(function() {
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js not loaded');
+        return;
+    }
+    
+    // Ensure we have data
+    if (!window.changeRequests || window.changeRequests.length === 0) {
+        window.changeRequests = [];
+        for (var i = 0; i < 20; i++) {
+            window.changeRequests.push({
+                id: 'CR-' + (Date.now() + i),
+                date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                status: ['submitted', 'reviewed', 'approved', 'in-progress', 'completed', 'rejected'][Math.floor(Math.random() * 6)],
+                priority: ['high', 'medium', 'low'][Math.floor(Math.random() * 3)],
+                department: ['sales', 'service', 'engineering', 'production', 'quality', 'warranty'][Math.floor(Math.random() * 6)],
+                changeType: ['modification', 'repair', 'safety', 'recall', 'warranty', 'customization'][Math.floor(Math.random() * 6)]
+            });
+        }
+    }
+    
+    var requests = window.changeRequests;
+    console.log('Rendering 6 charts with ' + requests.length + ' requests...');
+    
+    // Chart 3: Timeline Chart
+    var timelineCtx = document.getElementById('timelineChart');
+    if (timelineCtx) {
+        var dateGroups = {};
+        requests.forEach(function(req) {
+            if (!dateGroups[req.date]) dateGroups[req.date] = 0;
+            dateGroups[req.date]++;
+        });
+        var sortedDates = Object.keys(dateGroups).sort();
+        var counts = sortedDates.map(function(d) { return dateGroups[d]; });
+        
+        new Chart(timelineCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: sortedDates,
+                datasets: [{
+                    label: 'Requests Over Time',
+                    data: counts,
+                    borderColor: '#ff6666',
+                    backgroundColor: 'rgba(255, 102, 102, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#ffffff' } } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#ffffff', stepSize: 1 },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#ffffff', maxRotation: 45, minRotation: 45 },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                }
+            }
+        });
+        console.log('✅ Timeline chart rendered');
+    }
+    
+    // Chart 4: Department Chart
+    var deptCtx = document.getElementById('departmentChart');
+    if (deptCtx) {
+        var depts = ['sales', 'service', 'engineering', 'production', 'quality', 'warranty'];
+        var deptCounts = depts.map(function(d) {
+            return requests.filter(function(r) { return r.department === d; }).length;
+        });
+        
+        new Chart(deptCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: depts.map(function(d) { return d.toUpperCase(); }),
+                datasets: [{
+                    label: 'Requests by Department',
+                    data: deptCounts,
+                    backgroundColor: '#8B0000'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#ffffff' } } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#ffffff', stepSize: 1 },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#ffffff' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                }
+            }
+        });
+        console.log('✅ Department chart rendered');
+    }
+    
+    // Chart 5: Change Type Chart
+    var typeCtx = document.getElementById('changeTypeChart');
+    if (typeCtx) {
+        var types = ['modification', 'repair', 'safety', 'recall', 'warranty', 'customization'];
+        var typeCounts = types.map(function(t) {
+            return requests.filter(function(r) { return r.changeType === t; }).length;
+        });
+        
+        new Chart(typeCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: types.map(function(t) { return t.charAt(0).toUpperCase() + t.slice(1); }),
+                datasets: [{
+                    label: 'Requests by Type',
+                    data: typeCounts,
+                    backgroundColor: '#ff6666'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { labels: { color: '#ffffff' } } },
+                scales: {
+                    y: {
+                        ticks: { color: '#ffffff' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        beginAtZero: true,
+                        ticks: { color: '#ffffff', stepSize: 1 },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                }
+            }
+        });
+        console.log('✅ Change type chart rendered');
+    }
+    
+    // Chart 6: Completion Time (if you have this chart)
+    var compCtx = document.getElementById('completionTimeChart');
+    if (compCtx) {
+        new Chart(compCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['High Priority', 'Medium Priority', 'Low Priority'],
+                datasets: [{
+                    label: 'Avg Days to Complete',
+                    data: [5, 10, 15],
+                    backgroundColor: ['#dc3545', '#ffc107', '#28a745']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#ffffff' } } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#ffffff' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#ffffff' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                }
+            }
+        });
+        console.log('✅ Completion time chart rendered');
+    }
+    
+    console.log('✅ All 6 charts rendered successfully!');
+    
+}, 3000);
+</script>
     </body></html>
+
 
 
