@@ -4731,7 +4731,64 @@ window.submitRequest = async function() {
 
 console.log('✅ Google Sheets integration loaded');
 </script>
+  <script>
+// Auto-sync every 2 minutes
+setInterval(function() {
+    var config = JSON.parse(localStorage.getItem('forkliftSystemConfig') || '{}');
+    if (config.isConfigured && config.sheetUrl) {
+        console.log('Auto-syncing with Google Sheets...');
+        syncWithGoogleSheets();
+    }
+}, 120000); // 2 minutes
+
+async function syncWithGoogleSheets() {
+    var config = JSON.parse(localStorage.getItem('forkliftSystemConfig') || '{}');
+    if (!config.sheetUrl) return;
+    
+    try {
+        var response = await fetch(config.sheetUrl + '?action=getAll');
+        var data = await response.json();
+        
+        if (data.status === 'success') {
+            window.changeRequests = data.data;
+            console.log('✅ Synced: ' + data.data.length + ' requests');
+            // Refresh the view if on requests tab
+            if (typeof renderRequests === 'function') {
+                renderRequests();
+            }
+        }
+    } catch (error) {
+        console.log('Sync error:', error);
+    }
+}
+
+console.log('✅ Auto-sync enabled (every 2 minutes)');
+</script>
+  <script>
+// Pre-configure for all users
+(function() {
+    var defaultConfig = {
+        sheetUrl: 'https://script.google.com/macros/s/AKfycbxI1lU-JVSaIvLUDj1wlAF4A6-KaQtmvMIa7x8YBMtL_sWzeIRLFl4NbwwmqdYcxGYhOw/exec',
+        emailPublicKey: 'NwjDFj7MwDCmcMz9b',
+        emailServiceId: 'service_wftav67',
+        emailTemplateId: 'template_x0gah79',
+        isConfigured: true
+    };
+    
+    // Only set if not already configured
+    if (!localStorage.getItem('forkliftSystemConfig')) {
+        localStorage.setItem('forkliftSystemConfig', JSON.stringify(defaultConfig));
+        console.log('✅ Auto-configured for user');
+    }
+    
+    // Initialize EmailJS
+    if (typeof emailjs !== 'undefined') {
+        emailjs.init(defaultConfig.emailPublicKey);
+    }
+})();
+</script>
     </body></html>
+
 
 
 
